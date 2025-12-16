@@ -1,6 +1,6 @@
 {
   "name": "@openmbti/core",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Core OEJTS (Open Extended Jungian Type Scales) MBTI personality test questions and scoring logic",
   "type": "module",
   "main": "./dist/index.js",
@@ -31,7 +31,7 @@
     "jung",
     "jungian"
   ],
-  "author": "",
+  "author": "ya-luotao <luotao@hey.com>",
   "license": "MIT",
   "repository": {
     "type": "git",

@@ -64,8 +64,8 @@ export const questions: QuestionPair[] = [
   {
     id: 2,
     dimension: 'TF',
-    leftTrait: { en: 'Skeptical', zh: '持怀疑态度', ja: '懐疑的', ko: '회의적이다', 'zh-tw': '持懷疑態度' },
-    rightTrait: { en: 'Wants to believe', zh: '愿意相信', ja: '信じたい', ko: '믿고 싶어한다', 'zh-tw': '願意相信' },
+    leftTrait: { en: 'Wants to believe', zh: '愿意相信', ja: '信じたい', ko: '믿고 싶어한다', 'zh-tw': '願意相信' },
+    rightTrait: { en: 'Skeptical', zh: '持怀疑态度', ja: '懐疑的', ko: '회의적이다', 'zh-tw': '持懷疑態度' },
   },
   {
     id: 6,
