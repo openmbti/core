@@ -1,0 +1,47 @@
+{
+  "name": "@openmbti/core",
+  "version": "1.0.0",
+  "description": "Core OEJTS (Open Extended Jungian Type Scales) MBTI personality test questions and scoring logic",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "mbti",
+    "oejts",
+    "openmbti",
+    "personality",
+    "psychology",
+    "test",
+    "jung",
+    "jungian"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/openmbti/core.git"
+  },
+  "bugs": {
+    "url": "https://github.com/openmbti/core/issues"
+  },
+  "homepage": "https://openmbti.org",
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}
