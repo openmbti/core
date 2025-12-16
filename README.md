@@ -2,6 +2,8 @@
 
 Core OEJTS (Open Extended Jungian Type Scales) MBTI personality test questions and scoring logic.
 
+Based on the [Open Extended Jungian Type Scales 1.2](https://openpsychometrics.org/tests/OEJTS/) by [Open Psychometrics](https://openpsychometrics.org/).
+
 ## Installation
 
 ```bash

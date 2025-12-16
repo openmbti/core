@@ -2,6 +2,10 @@ import type { QuestionPair, DimensionQuestions } from './types';
 
 /**
  * OEJTS 1.2 - 32 Questions
+ * Based on the Open Extended Jungian Type Scales 1.2
+ * Source: https://openpsychometrics.org/tests/OEJTS/
+ * Credit: Open Psychometrics (https://openpsychometrics.org/)
+ *
  * Each question is a bipolar trait pair scored on a 1-5 scale
  * 1 = Strongly left trait, 5 = Strongly right trait
  */
