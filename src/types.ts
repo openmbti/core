@@ -51,6 +51,7 @@ export interface BilingualText {
 export interface QuestionPair {
   id: number;
   dimension: Dimension;
+  title?: BilingualText; // Optional question prompt to guide users
   leftTrait: BilingualText;
   rightTrait: BilingualText;
 }
