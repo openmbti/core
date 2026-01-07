@@ -259,3 +259,21 @@ export const TOTAL_QUESTIONS = 32;
 
 // Questions per dimension
 export const QUESTIONS_PER_DIMENSION = 8;
+
+/**
+ * Quick Test Mode - 8 most discriminating questions (2 per dimension)
+ * Selected for clarity and strong differentiation between types
+ */
+export const quickTestQuestionIds: Record<string, number[]> = {
+  EI: [3, 15],   // "Needs time alone" & "Gets worn out by parties" - clear E/I indicators
+  SN: [24, 32],  // "Details vs big picture" & "who/what/when vs why" - clear S/N indicators
+  TF: [22, 14],  // "Heart vs head" & "love vs respect" - clear T/F indicators
+  JP: [9, 13],   // "Organized vs chaotic" & "plans ahead vs last minute" - clear J/P indicators
+} as const;
+
+// Flat list of quick test question IDs (sorted by ID for consistent presentation)
+export const quickTestQuestions = Object.values(quickTestQuestionIds).flat().sort((a, b) => a - b);
+
+// Quick test totals
+export const QUICK_TEST_TOTAL = 8;
+export const QUICK_TEST_PER_DIMENSION = 2;
