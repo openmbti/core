@@ -38,6 +38,15 @@ export interface TestResult {
   percentages: DimensionPercentages;
 }
 
+// Single dimension test result
+export interface SingleDimensionResult {
+  dimension: Dimension;
+  score: number; // 8-40 range
+  preference: string; // E/I, S/N, T/F, or J/P letter
+  leftPercent: number; // 0-100
+  rightPercent: number; // 0-100
+}
+
 // Multilingual text (en is required, others optional for fallback)
 export interface BilingualText {
   en: string;

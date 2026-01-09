@@ -5,8 +5,19 @@ import {
   calculatePercentages,
   generateResult,
   isTestComplete,
+  // Single dimension functions
+  calculateDimensionScore,
+  determineDimensionPreference,
+  calculateDimensionPercentages,
+  generateDimensionResult,
+  isDimensionTestComplete,
+  getDimensionQuestionIds,
+  DIMENSION_QUESTIONS_COUNT,
+  DIMENSION_SCORE_MIN,
+  DIMENSION_SCORE_MAX,
+  DIMENSION_THRESHOLD,
 } from './scoring';
-import type { TestAnswers, DimensionScores } from './types';
+import type { TestAnswers, DimensionScores, Dimension } from './types';
 import { dimensionQuestions, TOTAL_QUESTIONS } from './questions';
 
 describe('calculateScores', () => {
@@ -343,5 +354,311 @@ describe('isTestComplete', () => {
       answers[i] = 3;
     }
     expect(isTestComplete(answers)).toBe(true);
+  });
+});
+
+// ============================================
+// Single Dimension Test Functions
+// ============================================
+
+describe('Dimension scoring constants', () => {
+  it('has correct constant values', () => {
+    expect(DIMENSION_QUESTIONS_COUNT).toBe(8);
+    expect(DIMENSION_SCORE_MIN).toBe(8);
+    expect(DIMENSION_SCORE_MAX).toBe(40);
+    expect(DIMENSION_THRESHOLD).toBe(24);
+  });
+});
+
+describe('getDimensionQuestionIds', () => {
+  it('returns 8 question IDs for each dimension', () => {
+    const dimensions: Dimension[] = ['EI', 'SN', 'TF', 'JP'];
+    dimensions.forEach((dim) => {
+      const ids = getDimensionQuestionIds(dim);
+      expect(ids.length).toBe(8);
+    });
+  });
+
+  it('returns correct IDs for EI dimension', () => {
+    const ids = getDimensionQuestionIds('EI');
+    expect(ids).toEqual([3, 7, 11, 15, 19, 23, 27, 31]);
+  });
+
+  it('returns correct IDs for SN dimension', () => {
+    const ids = getDimensionQuestionIds('SN');
+    expect(ids).toEqual([4, 8, 12, 16, 20, 24, 28, 32]);
+  });
+
+  it('returns correct IDs for TF dimension', () => {
+    const ids = getDimensionQuestionIds('TF');
+    expect(ids).toEqual([2, 6, 10, 14, 18, 22, 26, 30]);
+  });
+
+  it('returns correct IDs for JP dimension', () => {
+    const ids = getDimensionQuestionIds('JP');
+    expect(ids).toEqual([1, 5, 9, 13, 17, 21, 25, 29]);
+  });
+});
+
+describe('calculateDimensionScore', () => {
+  it('returns minimum score (8) when all answers are 1', () => {
+    const answers: TestAnswers = {};
+    dimensionQuestions.EI.forEach((id) => {
+      answers[id] = 1;
+    });
+    expect(calculateDimensionScore(answers, 'EI')).toBe(8);
+  });
+
+  it('returns maximum score (40) when all answers are 5', () => {
+    const answers: TestAnswers = {};
+    dimensionQuestions.SN.forEach((id) => {
+      answers[id] = 5;
+    });
+    expect(calculateDimensionScore(answers, 'SN')).toBe(40);
+  });
+
+  it('returns neutral score (24) when all answers are 3', () => {
+    const answers: TestAnswers = {};
+    dimensionQuestions.TF.forEach((id) => {
+      answers[id] = 3;
+    });
+    expect(calculateDimensionScore(answers, 'TF')).toBe(24);
+  });
+
+  it('defaults missing answers to neutral (3)', () => {
+    const answers: TestAnswers = {};
+    expect(calculateDimensionScore(answers, 'JP')).toBe(24);
+  });
+
+  it('only considers questions for the specified dimension', () => {
+    const answers: TestAnswers = {};
+    // Answer EI questions with 5
+    dimensionQuestions.EI.forEach((id) => {
+      answers[id] = 5;
+    });
+    // Answer SN questions with 1
+    dimensionQuestions.SN.forEach((id) => {
+      answers[id] = 1;
+    });
+
+    expect(calculateDimensionScore(answers, 'EI')).toBe(40);
+    expect(calculateDimensionScore(answers, 'SN')).toBe(8);
+    expect(calculateDimensionScore(answers, 'TF')).toBe(24); // default
+    expect(calculateDimensionScore(answers, 'JP')).toBe(24); // default
+  });
+});
+
+describe('determineDimensionPreference', () => {
+  // EI dimension tests
+  it('returns E for EI score at or below threshold', () => {
+    expect(determineDimensionPreference(8, 'EI')).toBe('E');
+    expect(determineDimensionPreference(24, 'EI')).toBe('E');
+  });
+
+  it('returns I for EI score above threshold', () => {
+    expect(determineDimensionPreference(25, 'EI')).toBe('I');
+    expect(determineDimensionPreference(40, 'EI')).toBe('I');
+  });
+
+  // SN dimension tests
+  it('returns S for SN score at or below threshold', () => {
+    expect(determineDimensionPreference(8, 'SN')).toBe('S');
+    expect(determineDimensionPreference(24, 'SN')).toBe('S');
+  });
+
+  it('returns N for SN score above threshold', () => {
+    expect(determineDimensionPreference(25, 'SN')).toBe('N');
+    expect(determineDimensionPreference(40, 'SN')).toBe('N');
+  });
+
+  // TF dimension tests
+  it('returns F for TF score at or below threshold', () => {
+    expect(determineDimensionPreference(8, 'TF')).toBe('F');
+    expect(determineDimensionPreference(24, 'TF')).toBe('F');
+  });
+
+  it('returns T for TF score above threshold', () => {
+    expect(determineDimensionPreference(25, 'TF')).toBe('T');
+    expect(determineDimensionPreference(40, 'TF')).toBe('T');
+  });
+
+  // JP dimension tests
+  it('returns J for JP score at or below threshold', () => {
+    expect(determineDimensionPreference(8, 'JP')).toBe('J');
+    expect(determineDimensionPreference(24, 'JP')).toBe('J');
+  });
+
+  it('returns P for JP score above threshold', () => {
+    expect(determineDimensionPreference(25, 'JP')).toBe('P');
+    expect(determineDimensionPreference(40, 'JP')).toBe('P');
+  });
+});
+
+describe('calculateDimensionPercentages', () => {
+  it('returns 100% left / 0% right for minimum score (8)', () => {
+    const result = calculateDimensionPercentages(8);
+    expect(result.left).toBe(100);
+    expect(result.right).toBe(0);
+  });
+
+  it('returns 0% left / 100% right for maximum score (40)', () => {
+    const result = calculateDimensionPercentages(40);
+    expect(result.left).toBe(0);
+    expect(result.right).toBe(100);
+  });
+
+  it('returns 50% / 50% for neutral score (24)', () => {
+    const result = calculateDimensionPercentages(24);
+    expect(result.left).toBe(50);
+    expect(result.right).toBe(50);
+  });
+
+  it('percentages sum to 100', () => {
+    const testScores = [8, 16, 24, 32, 40];
+    testScores.forEach((score) => {
+      const result = calculateDimensionPercentages(score);
+      expect(result.left + result.right).toBe(100);
+    });
+  });
+
+  it('correctly rounds percentages', () => {
+    // Score 9: (9-8)/32*100 = 3.125 -> rounds to 3%
+    const result = calculateDimensionPercentages(9);
+    expect(result.right).toBe(3);
+    expect(result.left).toBe(97);
+  });
+});
+
+describe('generateDimensionResult', () => {
+  it('generates complete result with all components', () => {
+    const answers: TestAnswers = {};
+    dimensionQuestions.EI.forEach((id) => {
+      answers[id] = 3;
+    });
+    const result = generateDimensionResult(answers, 'EI');
+
+    expect(result).toHaveProperty('dimension');
+    expect(result).toHaveProperty('score');
+    expect(result).toHaveProperty('preference');
+    expect(result).toHaveProperty('leftPercent');
+    expect(result).toHaveProperty('rightPercent');
+  });
+
+  it('returns correct E preference for low EI score', () => {
+    const answers: TestAnswers = {};
+    dimensionQuestions.EI.forEach((id) => {
+      answers[id] = 1;
+    });
+    const result = generateDimensionResult(answers, 'EI');
+
+    expect(result.dimension).toBe('EI');
+    expect(result.score).toBe(8);
+    expect(result.preference).toBe('E');
+    expect(result.leftPercent).toBe(100);
+    expect(result.rightPercent).toBe(0);
+  });
+
+  it('returns correct I preference for high EI score', () => {
+    const answers: TestAnswers = {};
+    dimensionQuestions.EI.forEach((id) => {
+      answers[id] = 5;
+    });
+    const result = generateDimensionResult(answers, 'EI');
+
+    expect(result.dimension).toBe('EI');
+    expect(result.score).toBe(40);
+    expect(result.preference).toBe('I');
+    expect(result.leftPercent).toBe(0);
+    expect(result.rightPercent).toBe(100);
+  });
+
+  it('returns correct N preference for high SN score', () => {
+    const answers: TestAnswers = {};
+    dimensionQuestions.SN.forEach((id) => {
+      answers[id] = 4;
+    });
+    const result = generateDimensionResult(answers, 'SN');
+
+    expect(result.dimension).toBe('SN');
+    expect(result.score).toBe(32);
+    expect(result.preference).toBe('N');
+    expect(result.rightPercent).toBeGreaterThan(50);
+  });
+
+  it('returns correct T preference for high TF score', () => {
+    const answers: TestAnswers = {};
+    dimensionQuestions.TF.forEach((id) => {
+      answers[id] = 5;
+    });
+    const result = generateDimensionResult(answers, 'TF');
+
+    expect(result.dimension).toBe('TF');
+    expect(result.preference).toBe('T');
+  });
+
+  it('returns correct J preference for low JP score', () => {
+    const answers: TestAnswers = {};
+    dimensionQuestions.JP.forEach((id) => {
+      answers[id] = 2;
+    });
+    const result = generateDimensionResult(answers, 'JP');
+
+    expect(result.dimension).toBe('JP');
+    expect(result.preference).toBe('J');
+  });
+});
+
+describe('isDimensionTestComplete', () => {
+  it('returns false for empty answers', () => {
+    expect(isDimensionTestComplete({}, 'EI')).toBe(false);
+    expect(isDimensionTestComplete({}, 'SN')).toBe(false);
+    expect(isDimensionTestComplete({}, 'TF')).toBe(false);
+    expect(isDimensionTestComplete({}, 'JP')).toBe(false);
+  });
+
+  it('returns false for partial answers', () => {
+    const answers: TestAnswers = {
+      3: 3, // First EI question
+      7: 3, // Second EI question
+    };
+    expect(isDimensionTestComplete(answers, 'EI')).toBe(false);
+  });
+
+  it('returns true when all 8 dimension questions are answered', () => {
+    const answers: TestAnswers = {};
+    dimensionQuestions.EI.forEach((id) => {
+      answers[id] = 3;
+    });
+    expect(isDimensionTestComplete(answers, 'EI')).toBe(true);
+  });
+
+  it('ignores answers from other dimensions', () => {
+    const answers: TestAnswers = {};
+    // Answer all SN questions
+    dimensionQuestions.SN.forEach((id) => {
+      answers[id] = 3;
+    });
+    // EI should still be incomplete
+    expect(isDimensionTestComplete(answers, 'EI')).toBe(false);
+    expect(isDimensionTestComplete(answers, 'SN')).toBe(true);
+  });
+
+  it('works correctly for all dimensions', () => {
+    const dimensions: Dimension[] = ['EI', 'SN', 'TF', 'JP'];
+
+    dimensions.forEach((dim) => {
+      const answers: TestAnswers = {};
+      dimensionQuestions[dim].forEach((id) => {
+        answers[id] = 3;
+      });
+      expect(isDimensionTestComplete(answers, dim)).toBe(true);
+
+      // Other dimensions should be incomplete
+      dimensions
+        .filter((d) => d !== dim)
+        .forEach((otherDim) => {
+          expect(isDimensionTestComplete(answers, otherDim)).toBe(false);
+        });
+    });
   });
 });
