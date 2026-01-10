@@ -50,3 +50,25 @@ export {
   isDimensionTestComplete,
   getDimensionQuestionIds,
 } from './scoring';
+
+// PurrJung Cat Test - Questions data
+export {
+  purrjungQuestions,
+  purrjungDimensionQuestions,
+  sortedPurrjungQuestions,
+  PURRJUNG_TOTAL_QUESTIONS,
+  PURRJUNG_QUESTIONS_PER_DIMENSION,
+} from './purrjungQuestions';
+
+// PurrJung Cat Test - Scoring functions
+export {
+  PURRJUNG_SCORE_MIN,
+  PURRJUNG_SCORE_MAX,
+  PURRJUNG_THRESHOLD,
+  calculatePurrjungScores,
+  determinePurrjungType,
+  calculatePurrjungPercentages,
+  generatePurrjungResult,
+  isPurrjungTestComplete,
+  getPurrjungDimensionQuestionIds,
+} from './purrjungScoring';
