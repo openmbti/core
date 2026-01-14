@@ -16,8 +16,15 @@ import {
   DIMENSION_SCORE_MIN,
   DIMENSION_SCORE_MAX,
   DIMENSION_THRESHOLD,
+  // Test Quality Metrics
+  getConfidenceLevel,
+  calculateDimensionConfidence,
+  calculateTestConfidence,
+  checkDimensionConsistency,
+  checkTestConsistency,
+  getConfidenceLabel,
 } from './scoring';
-import type { TestAnswers, DimensionScores, Dimension } from './types';
+import type { TestAnswers, DimensionScores, Dimension, ConfidenceLevel } from './types';
 import { dimensionQuestions, TOTAL_QUESTIONS } from './questions';
 
 describe('calculateScores', () => {
@@ -660,5 +667,212 @@ describe('isDimensionTestComplete', () => {
           expect(isDimensionTestComplete(answers, otherDim)).toBe(false);
         });
     });
+  });
+});
+
+// ============================================
+// Test Quality Metrics Functions
+// ============================================
+
+describe('getConfidenceLevel', () => {
+  it('returns "strong" for distance >= 12', () => {
+    expect(getConfidenceLevel(12)).toBe('strong');
+    expect(getConfidenceLevel(16)).toBe('strong');
+    expect(getConfidenceLevel(14)).toBe('strong');
+  });
+
+  it('returns "moderate" for distance 6-11', () => {
+    expect(getConfidenceLevel(6)).toBe('moderate');
+    expect(getConfidenceLevel(11)).toBe('moderate');
+    expect(getConfidenceLevel(8)).toBe('moderate');
+  });
+
+  it('returns "slight" for distance 2-5', () => {
+    expect(getConfidenceLevel(2)).toBe('slight');
+    expect(getConfidenceLevel(5)).toBe('slight');
+    expect(getConfidenceLevel(3)).toBe('slight');
+  });
+
+  it('returns "balanced" for distance 0-1', () => {
+    expect(getConfidenceLevel(0)).toBe('balanced');
+    expect(getConfidenceLevel(1)).toBe('balanced');
+  });
+});
+
+describe('calculateDimensionConfidence', () => {
+  it('returns strong confidence for extreme scores', () => {
+    // Score 8 -> distance = 16 from threshold 24
+    const result = calculateDimensionConfidence(8, 'EI');
+    expect(result.level).toBe('strong');
+    expect(result.distance).toBe(16);
+    expect(result.percentage).toBe(100);
+    expect(result.dimension).toBe('EI');
+  });
+
+  it('returns balanced confidence for threshold scores', () => {
+    // Score 24 -> distance = 0 from threshold 24
+    const result = calculateDimensionConfidence(24, 'SN');
+    expect(result.level).toBe('balanced');
+    expect(result.distance).toBe(0);
+    expect(result.percentage).toBe(0);
+  });
+
+  it('returns moderate confidence for mid-range scores', () => {
+    // Score 32 -> distance = 8 from threshold 24
+    const result = calculateDimensionConfidence(32, 'TF');
+    expect(result.level).toBe('moderate');
+    expect(result.distance).toBe(8);
+    expect(result.percentage).toBe(50);
+  });
+
+  it('returns slight confidence for near-threshold scores', () => {
+    // Score 27 -> distance = 3 from threshold 24
+    const result = calculateDimensionConfidence(27, 'JP');
+    expect(result.level).toBe('slight');
+    expect(result.distance).toBe(3);
+  });
+
+  it('handles both sides of threshold symmetrically', () => {
+    const highResult = calculateDimensionConfidence(36, 'EI');
+    const lowResult = calculateDimensionConfidence(12, 'EI');
+    expect(highResult.level).toBe(lowResult.level);
+    expect(highResult.distance).toBe(lowResult.distance);
+  });
+});
+
+describe('calculateTestConfidence', () => {
+  it('calculates confidence for all dimensions', () => {
+    const scores: DimensionScores = { EI: 8, SN: 24, TF: 32, JP: 40 };
+    const result = calculateTestConfidence(scores);
+
+    expect(result.EI.level).toBe('strong');
+    expect(result.SN.level).toBe('balanced');
+    expect(result.TF.level).toBe('moderate');
+    expect(result.JP.level).toBe('strong');
+  });
+
+  it('calculates clarityIndex as average confidence', () => {
+    // All extreme scores -> max clarity
+    const extremeScores: DimensionScores = { EI: 8, SN: 8, TF: 8, JP: 8 };
+    const extremeResult = calculateTestConfidence(extremeScores);
+    expect(extremeResult.clarityIndex).toBe(100);
+
+    // All threshold scores -> min clarity
+    const neutralScores: DimensionScores = { EI: 24, SN: 24, TF: 24, JP: 24 };
+    const neutralResult = calculateTestConfidence(neutralScores);
+    expect(neutralResult.clarityIndex).toBe(0);
+  });
+
+  it('returns clarityIndex between 0 and 100', () => {
+    const mixedScores: DimensionScores = { EI: 20, SN: 28, TF: 16, JP: 32 };
+    const result = calculateTestConfidence(mixedScores);
+    expect(result.clarityIndex).toBeGreaterThanOrEqual(0);
+    expect(result.clarityIndex).toBeLessThanOrEqual(100);
+  });
+});
+
+describe('checkDimensionConsistency', () => {
+  it('returns consistent for uniform answers', () => {
+    const answers: TestAnswers = {};
+    dimensionQuestions.EI.forEach((id) => {
+      answers[id] = 3;
+    });
+    const result = checkDimensionConsistency(answers, 'EI');
+    expect(result.isConsistent).toBe(true);
+    expect(result.flaggedPairs).toHaveLength(0);
+    expect(result.variance).toBe(0);
+  });
+
+  it('flags inconsistent adjacent pairs', () => {
+    const answers: TestAnswers = {};
+    // EI questions: [3, 7, 11, 15, 19, 23, 27, 31]
+    dimensionQuestions.EI.forEach((id, index) => {
+      // Alternate between 1 and 5 (difference of 4 >= threshold of 3)
+      answers[id] = index % 2 === 0 ? 1 : 5;
+    });
+    const result = checkDimensionConsistency(answers, 'EI');
+    expect(result.isConsistent).toBe(false);
+    expect(result.flaggedPairs.length).toBeGreaterThan(0);
+  });
+
+  it('has high variance for inconsistent answers', () => {
+    const answers: TestAnswers = {};
+    dimensionQuestions.SN.forEach((id, index) => {
+      answers[id] = index % 2 === 0 ? 1 : 5;
+    });
+    const result = checkDimensionConsistency(answers, 'SN');
+    expect(result.variance).toBeGreaterThan(0);
+  });
+
+  it('accepts gradual variations', () => {
+    const answers: TestAnswers = {};
+    // Gradual progression: 2, 2, 3, 3, 3, 4, 4, 4 (max diff = 1)
+    const values = [2, 2, 3, 3, 3, 4, 4, 4];
+    dimensionQuestions.TF.forEach((id, index) => {
+      answers[id] = values[index];
+    });
+    const result = checkDimensionConsistency(answers, 'TF');
+    expect(result.isConsistent).toBe(true);
+  });
+});
+
+describe('checkTestConsistency', () => {
+  it('returns overall consistent when all dimensions are consistent', () => {
+    const answers: TestAnswers = {};
+    for (let i = 1; i <= 32; i++) {
+      answers[i] = 3;
+    }
+    const result = checkTestConsistency(answers);
+    expect(result.overallConsistent).toBe(true);
+    expect(result.warnings).toHaveLength(0);
+  });
+
+  it('adds warnings for inconsistent dimensions', () => {
+    const answers: TestAnswers = {};
+    // Make EI inconsistent
+    dimensionQuestions.EI.forEach((id, index) => {
+      answers[id] = index % 2 === 0 ? 1 : 5;
+    });
+    // Make other dimensions consistent
+    [...dimensionQuestions.SN, ...dimensionQuestions.TF, ...dimensionQuestions.JP].forEach((id) => {
+      answers[id] = 3;
+    });
+    const result = checkTestConsistency(answers);
+    expect(result.overallConsistent).toBe(false);
+    expect(result.warnings.length).toBeGreaterThan(0);
+    expect(result.EI.isConsistent).toBe(false);
+    expect(result.SN.isConsistent).toBe(true);
+  });
+
+  it('returns results for all dimensions', () => {
+    const answers: TestAnswers = {};
+    for (let i = 1; i <= 32; i++) {
+      answers[i] = 3;
+    }
+    const result = checkTestConsistency(answers);
+    expect(result).toHaveProperty('EI');
+    expect(result).toHaveProperty('SN');
+    expect(result).toHaveProperty('TF');
+    expect(result).toHaveProperty('JP');
+  });
+});
+
+describe('getConfidenceLabel', () => {
+  it('returns correct label for strong preference', () => {
+    expect(getConfidenceLabel('strong', 'I')).toBe('Strong I preference');
+    expect(getConfidenceLabel('strong', 'E')).toBe('Strong E preference');
+  });
+
+  it('returns correct label for moderate preference', () => {
+    expect(getConfidenceLabel('moderate', 'N')).toBe('Moderate N preference');
+  });
+
+  it('returns correct label for slight preference', () => {
+    expect(getConfidenceLabel('slight', 'T')).toBe('Slight T preference');
+  });
+
+  it('returns balanced label regardless of preference', () => {
+    expect(getConfidenceLabel('balanced', 'J')).toBe('Balanced on this dimension');
+    expect(getConfidenceLabel('balanced', 'P')).toBe('Balanced on this dimension');
   });
 });

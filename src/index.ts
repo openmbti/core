@@ -9,6 +9,12 @@ export type {
   BilingualText,
   QuestionPair,
   DimensionQuestions,
+  // Test Quality Metrics types
+  ConfidenceLevel,
+  DimensionConfidence,
+  TestConfidence,
+  ConsistencyResult,
+  TestConsistency,
 } from './types';
 
 // Questions data
@@ -49,6 +55,13 @@ export {
   generateDimensionResult,
   isDimensionTestComplete,
   getDimensionQuestionIds,
+  // Test Quality Metrics
+  getConfidenceLevel,
+  calculateDimensionConfidence,
+  calculateTestConfidence,
+  checkDimensionConsistency,
+  checkTestConsistency,
+  getConfidenceLabel,
 } from './scoring';
 
 // PurrJung Cat Test - Questions data

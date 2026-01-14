@@ -69,3 +69,45 @@ export interface QuestionPair {
 export type DimensionQuestions = {
   readonly [K in Dimension]: readonly number[];
 };
+
+// ============================================
+// Test Quality Metrics Types
+// ============================================
+
+/** Confidence level for a dimension preference */
+export type ConfidenceLevel = 'strong' | 'moderate' | 'slight' | 'balanced';
+
+/** Confidence result for a single dimension */
+export interface DimensionConfidence {
+  dimension: Dimension;
+  level: ConfidenceLevel;
+  distance: number; // Distance from threshold (0-16 for full test)
+  percentage: number; // 0-100 confidence percentage
+}
+
+/** Confidence results for all dimensions */
+export interface TestConfidence {
+  EI: DimensionConfidence;
+  SN: DimensionConfidence;
+  TF: DimensionConfidence;
+  JP: DimensionConfidence;
+  clarityIndex: number; // Overall profile clarity 0-100
+}
+
+/** Consistency check result for a dimension */
+export interface ConsistencyResult {
+  dimension: Dimension;
+  isConsistent: boolean;
+  variance: number; // Answer variance within dimension
+  flaggedPairs: [number, number][]; // Question pairs with high divergence
+}
+
+/** Overall consistency for test */
+export interface TestConsistency {
+  EI: ConsistencyResult;
+  SN: ConsistencyResult;
+  TF: ConsistencyResult;
+  JP: ConsistencyResult;
+  overallConsistent: boolean;
+  warnings: string[];
+}

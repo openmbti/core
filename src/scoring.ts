@@ -1,5 +1,17 @@
 import { dimensionQuestions, TOTAL_QUESTIONS, quickTestQuestionIds, QUICK_TEST_TOTAL, QUICK_TEST_PER_DIMENSION } from './questions';
-import type { TestAnswers, DimensionScores, DimensionPercentages, TestResult, Dimension, SingleDimensionResult } from './types';
+import type {
+  TestAnswers,
+  DimensionScores,
+  DimensionPercentages,
+  TestResult,
+  Dimension,
+  SingleDimensionResult,
+  ConfidenceLevel,
+  DimensionConfidence,
+  TestConfidence,
+  ConsistencyResult,
+  TestConsistency,
+} from './types';
 
 /**
  * Calculate dimension scores from test answers
@@ -274,4 +286,181 @@ export function isDimensionTestComplete(answers: TestAnswers, dimension: Dimensi
  */
 export function getDimensionQuestionIds(dimension: Dimension): readonly number[] {
   return dimensionQuestions[dimension];
+}
+
+// ============================================
+// Test Quality Metrics Functions
+// ============================================
+
+/**
+ * Confidence level thresholds based on distance from midpoint (24)
+ * - Strong: distance >= 12 (score 8-12 or 36-40)
+ * - Moderate: distance >= 6 (score 13-18 or 30-35)
+ * - Slight: distance >= 2 (score 19-22 or 26-29)
+ * - Balanced: distance < 2 (score 23-25)
+ */
+const CONFIDENCE_THRESHOLDS = {
+  strong: 12,
+  moderate: 6,
+  slight: 2,
+} as const;
+
+/**
+ * Calculate confidence level from distance to threshold
+ * @param distance - Absolute distance from threshold (0-16)
+ * @returns ConfidenceLevel
+ */
+export function getConfidenceLevel(distance: number): ConfidenceLevel {
+  if (distance >= CONFIDENCE_THRESHOLDS.strong) return 'strong';
+  if (distance >= CONFIDENCE_THRESHOLDS.moderate) return 'moderate';
+  if (distance >= CONFIDENCE_THRESHOLDS.slight) return 'slight';
+  return 'balanced';
+}
+
+/**
+ * Calculate confidence for a single dimension
+ * @param score - Raw dimension score (8-40)
+ * @param dimension - The dimension being measured
+ * @returns DimensionConfidence with level, distance, and percentage
+ */
+export function calculateDimensionConfidence(score: number, dimension: Dimension): DimensionConfidence {
+  const distance = Math.abs(score - DIMENSION_THRESHOLD);
+  const level = getConfidenceLevel(distance);
+  // Max distance is 16 (from 24 to 8 or 24 to 40), convert to percentage
+  const percentage = Math.round((distance / 16) * 100);
+
+  return {
+    dimension,
+    level,
+    distance,
+    percentage,
+  };
+}
+
+/**
+ * Calculate confidence for all dimensions and overall clarity
+ * @param scores - DimensionScores from test
+ * @returns TestConfidence with per-dimension confidence and clarity index
+ */
+export function calculateTestConfidence(scores: DimensionScores): TestConfidence {
+  const dimensions: Dimension[] = ['EI', 'SN', 'TF', 'JP'];
+  const confidences: Record<string, DimensionConfidence> = {};
+
+  let totalDistance = 0;
+  for (const dim of dimensions) {
+    const confidence = calculateDimensionConfidence(scores[dim], dim);
+    confidences[dim] = confidence;
+    totalDistance += confidence.distance;
+  }
+
+  // Clarity index: average distance normalized to 0-100
+  // Max total distance = 16 * 4 = 64
+  const clarityIndex = Math.round((totalDistance / 64) * 100);
+
+  return {
+    EI: confidences.EI,
+    SN: confidences.SN,
+    TF: confidences.TF,
+    JP: confidences.JP,
+    clarityIndex,
+  };
+}
+
+/**
+ * Calculate variance of answers within a dimension
+ * @param answers - Test answers
+ * @param dimension - Target dimension
+ * @returns Variance of the 8 answers (0 = all same, higher = more varied)
+ */
+function calculateAnswerVariance(answers: TestAnswers, dimension: Dimension): number {
+  const questionIds = dimensionQuestions[dimension];
+  const values = questionIds.map(qId => answers[qId] ?? 3);
+
+  if (values.length === 0) return 0;
+
+  const mean = values.reduce((a, b) => a + b, 0) / values.length;
+  const squaredDiffs = values.map(v => Math.pow(v - mean, 2));
+  return squaredDiffs.reduce((a, b) => a + b, 0) / values.length;
+}
+
+/** Maximum answer difference to consider consistent (on 1-5 scale) */
+const CONSISTENCY_THRESHOLD = 3;
+
+/**
+ * Check consistency of answers within a dimension
+ * Flags question pairs where answers differ significantly
+ * @param answers - Test answers
+ * @param dimension - Target dimension
+ * @returns ConsistencyResult with variance and flagged pairs
+ */
+export function checkDimensionConsistency(answers: TestAnswers, dimension: Dimension): ConsistencyResult {
+  const questionIds = dimensionQuestions[dimension];
+  const variance = calculateAnswerVariance(answers, dimension);
+  const flaggedPairs: [number, number][] = [];
+
+  // Compare adjacent question pairs within dimension
+  for (let i = 0; i < questionIds.length - 1; i++) {
+    const q1 = questionIds[i];
+    const q2 = questionIds[i + 1];
+    const diff = Math.abs((answers[q1] ?? 3) - (answers[q2] ?? 3));
+    if (diff >= CONSISTENCY_THRESHOLD) {
+      flaggedPairs.push([q1, q2]);
+    }
+  }
+
+  return {
+    dimension,
+    isConsistent: flaggedPairs.length === 0,
+    variance,
+    flaggedPairs,
+  };
+}
+
+/**
+ * Check consistency across all dimensions
+ * @param answers - Complete test answers
+ * @returns TestConsistency with per-dimension results and overall status
+ */
+export function checkTestConsistency(answers: TestAnswers): TestConsistency {
+  const dimensions: Dimension[] = ['EI', 'SN', 'TF', 'JP'];
+  const results: Record<string, ConsistencyResult> = {};
+  const warnings: string[] = [];
+
+  let allConsistent = true;
+  for (const dim of dimensions) {
+    const result = checkDimensionConsistency(answers, dim);
+    results[dim] = result;
+    if (!result.isConsistent) {
+      allConsistent = false;
+      warnings.push(`Inconsistent answers in ${dim} dimension`);
+    }
+  }
+
+  return {
+    EI: results.EI,
+    SN: results.SN,
+    TF: results.TF,
+    JP: results.JP,
+    overallConsistent: allConsistent,
+    warnings,
+  };
+}
+
+/**
+ * Get a descriptive label for confidence level
+ * @param level - ConfidenceLevel
+ * @param preference - The dominant preference letter (E, I, S, N, etc.)
+ * @returns Human-readable description
+ */
+export function getConfidenceLabel(level: ConfidenceLevel, preference: string): string {
+  switch (level) {
+    case 'strong':
+      return `Strong ${preference} preference`;
+    case 'moderate':
+      return `Moderate ${preference} preference`;
+    case 'slight':
+      return `Slight ${preference} preference`;
+    case 'balanced':
+      return 'Balanced on this dimension';
+  }
 }
