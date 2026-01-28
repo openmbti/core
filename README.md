@@ -101,7 +101,7 @@ Users answer on a 1-5 scale:
 Install the OpenJung API skill for Claude Code to get AI-assisted integration guidance:
 
 ```bash
-npx @anthropic-ai/claude-code skills add https://github.com/openmbti/core --skill openjung-api
+npx skills add https://github.com/openmbti/core --skill openjung-api
 ```
 
 This skill provides:
