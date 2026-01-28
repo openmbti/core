@@ -96,6 +96,19 @@ Users answer on a 1-5 scale:
 - Threshold of 24 determines type preference
 - Percentages normalized from 0-100%
 
+## Claude Code Skill
+
+Install the OpenJung API skill for Claude Code to get AI-assisted integration guidance:
+
+```bash
+npx @anthropic-ai/claude-code skills add https://github.com/openmbti/core --skill openjung-api
+```
+
+This skill provides:
+- Complete API endpoint documentation
+- Scoring system explanation
+- TypeScript types and integration examples
+
 ## License
 
 MIT
