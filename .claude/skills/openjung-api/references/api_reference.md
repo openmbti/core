@@ -174,7 +174,7 @@ interface DimensionConfidence {
       "compatibleTypes": ["INFJ", "INTJ", "INFP"],
       "famousExamples": ["Robin Williams", "Walt Disney"]
     },
-    "shareUrl": "https://openmbti.org/type/enfp?ei=18&sn=28&tf=22&jp=32"
+    "shareUrl": "https://openjung.org/type/enfp?ei=18&sn=28&tf=22&jp=32"
   },
   "recordId": "550e8400-e29b-41d4-a716-446655440000"
 }
@@ -378,7 +378,7 @@ function PersonalityTest() {
   const [result, setResult] = useState(null);
 
   useEffect(() => {
-    fetch('https://openmbti.org/api/questions')
+    fetch('https://openjung.org/api/questions')
       .then(r => r.json())
       .then(data => setQuestions(data.questions));
   }, []);
@@ -388,7 +388,7 @@ function PersonalityTest() {
   };
 
   const submit = async () => {
-    const response = await fetch('https://openmbti.org/api/calculate', {
+    const response = await fetch('https://openjung.org/api/calculate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ answers })
@@ -430,7 +430,7 @@ function PersonalityTest() {
 ```python
 import requests
 
-BASE_URL = "https://openmbti.org"
+BASE_URL = "https://openjung.org"
 
 # Fetch questions
 questions = requests.get(f"{BASE_URL}/api/questions").json()["questions"]
@@ -452,15 +452,15 @@ print(f"Scores: {result['result']['scores']}")
 
 ```bash
 # Fetch questions
-curl "https://openmbti.org/api/questions?locale=en"
+curl "https://openjung.org/api/questions?locale=en"
 
 # Calculate result
-curl -X POST "https://openmbti.org/api/calculate" \
+curl -X POST "https://openjung.org/api/calculate" \
   -H "Content-Type: application/json" \
   -d '{"answers":{"1":3,"2":4,"3":2,...,"32":5}}'
 
 # Get statistics
-curl "https://openmbti.org/api/stats"
+curl "https://openjung.org/api/stats"
 ```
 
 ---

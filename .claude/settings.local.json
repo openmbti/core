@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:openpsychometrics.org)",
+      "Bash(npm run build:*)",
+      "Bash(git config:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nFix TF dimension Q2 scoring direction\n\nSwapped \"Skeptical\" and \"Wants to believe\" traits in Q2 to align with\nOEJTS scoring methodology. Original test shows 1.17F differential,\nmeaning right-pole should correlate with Feeling, not Thinking.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)",
+      "Bash(npm publish:*)"
+    ]
+  }
+}

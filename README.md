@@ -1,4 +1,4 @@
-# @openmbti/core
+# @openjung/core
 
 Core OEJTS (Open Extended Jungian Type Scales) MBTI personality test questions and scoring logic.
 
@@ -7,7 +7,7 @@ Based on the [Open Extended Jungian Type Scales 1.2](https://openpsychometrics.o
 ## Installation
 
 ```bash
-npm install @openmbti/core
+npm install @openjung/core
 ```
 
 ## Usage
@@ -20,7 +20,7 @@ import {
   isTestComplete,
   type TestAnswers,
   type TestResult,
-} from '@openmbti/core';
+} from '@openjung/core';
 
 // Get all questions sorted by ID
 console.log(sortedQuestions.length); // 32
@@ -101,7 +101,7 @@ Users answer on a 1-5 scale:
 Install the OpenJung API skill for Claude Code to get AI-assisted integration guidance:
 
 ```bash
-npx skills add https://github.com/openmbti/core --skill openjung-api
+npx skills add https://github.com/openjung/core --skill openjung-api
 ```
 
 This skill provides:

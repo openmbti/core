@@ -1,5 +1,5 @@
 {
-  "name": "@openmbti/core",
+  "name": "@openjung/core",
   "version": "1.0.1",
   "description": "Core OEJTS (Open Extended Jungian Type Scales) MBTI personality test questions and scoring logic",
   "type": "module",
@@ -27,7 +27,7 @@
   "keywords": [
     "mbti",
     "oejts",
-    "openmbti",
+    "openjung",
     "personality",
     "psychology",
     "test",
@@ -38,12 +38,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/openmbti/core.git"
+    "url": "git+https://github.com/openjung/core.git"
   },
   "bugs": {
-    "url": "https://github.com/openmbti/core/issues"
+    "url": "https://github.com/openjung/core/issues"
   },
-  "homepage": "https://openmbti.org",
+  "homepage": "https://openjung.org",
   "devDependencies": {
     "typescript": "^5.7.0",
     "vitest": "^4.0.16"

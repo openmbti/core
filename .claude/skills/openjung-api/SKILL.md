@@ -3,7 +3,7 @@ name: openjung-api
 description: |
   Guide for integrating with the OpenJung (OEJTS) personality test API - a free, open-source alternative to MBTI.
   Use when building applications that need personality assessment, integrating MBTI-style tests, or working with
-  the OpenMBTI API endpoints. Covers: (1) Fetching test questions, (2) Submitting answers and calculating results,
+  the OpenJung API endpoints. Covers: (1) Fetching test questions, (2) Submitting answers and calculating results,
   (3) Understanding the scoring system, (4) Recording test sessions, (5) Retrieving aggregate statistics.
 ---
 
@@ -11,7 +11,7 @@ description: |
 
 OpenJung is an open-source personality test based on OEJTS (Open Extended Jungian Type Scales) - a validated 32-question assessment that determines MBTI-compatible personality types.
 
-**Base URL**: `https://openmbti.org`
+**Base URL**: `https://openjung.org`
 
 ## Quick Start
 
@@ -19,13 +19,13 @@ OpenJung is an open-source personality test based on OEJTS (Open Extended Jungia
 
 ```javascript
 // 1. Fetch questions
-const { questions } = await fetch('https://openmbti.org/api/questions').then(r => r.json());
+const { questions } = await fetch('https://openjung.org/api/questions').then(r => r.json());
 
 // 2. Collect user answers (32 questions, values 1-5)
 const answers = { "1": 3, "2": 5, /* ... all 32 */ "32": 4 };
 
 // 3. Calculate result
-const { result } = await fetch('https://openmbti.org/api/calculate', {
+const { result } = await fetch('https://openjung.org/api/calculate', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ answers })
@@ -85,7 +85,7 @@ POST /api/calculate
       "strengths": ["..."],
       "weaknesses": ["..."]
     },
-    "shareUrl": "https://openmbti.org/type/enfp?ei=18&sn=28&tf=22&jp=32"
+    "shareUrl": "https://openjung.org/type/enfp?ei=18&sn=28&tf=22&jp=32"
   },
   "recordId": "uuid"
 }
